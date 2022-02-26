@@ -1,0 +1,15 @@
+---
+procedure_id: update_model_%coin%
+body: >
+  CREATE OR REPLACE PROCEDURE models.update_model_%coin%()
+  BEGIN
+      CREATE OR REPLACE MODEL `${project}.models.bt_%coin%`
+      OPTIONS(MODEL_TYPE='BOOSTED_TREE_CLASSIFIER',
+            TREE_METHOD='EXACT',
+            DATA_SPLIT_METHOD = 'AUTO_SPLIT',
+            AUTO_CLASS_WEIGHTS = TRUE,
+            EARLY_STOP = FALSE,
+            INPUT_LABEL_COLS = ['win_in_hour'],
+            MAX_ITERATIONS=10)
+      AS SELECT * EXCEPT(minute_start) FROM `${project}.training_views.vw_training_%coin%` LIMIT 1000000;
+  END

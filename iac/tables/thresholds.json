@@ -1,0 +1,26 @@
+{
+    "dataset_id": "models",
+    "table_id": "thresholds",
+    "gsheet_data_configuration": null,
+    "time_partitioning": null,
+    "range_partitioning": null,
+    "clustering": null,
+    "description": null,
+    "schema": [{
+        "mode": "REQUIRED",
+        "name": "ingestion_timestamp",
+        "type": "TIMESTAMP"
+    }, {
+        "mode": "REQUIRED",
+        "name": "threshold",
+        "type": "FLOAT"
+    }, {
+        "mode": "REQUIRED",
+        "name": "coin",
+        "type": "STRING"
+    }, {
+        "mode": "REQUIRED",
+        "name": "pair",
+        "type": "STRING"
+    }]
+}

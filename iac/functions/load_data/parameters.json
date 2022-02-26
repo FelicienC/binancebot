@@ -1,0 +1,4 @@
+{
+    "project": "trading-dv",
+    "coin_list": ["BTC", "ETH", "SOL"]
+}

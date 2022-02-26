@@ -1,0 +1,58 @@
+{
+    "dataset_id": "trades",
+    "table_id": "trades",
+    "gsheet_data_configuration": null,
+    "time_partitioning": {
+        "type": "DAY",
+        "field": "ingestion_time",
+        "require_partition_filter": false
+    },
+    "range_partitioning": null,
+    "clustering": ["still_open", "pair"],
+    "description": null,
+    "schema": [{
+        "mode": "REQUIRED",
+        "name": "ingestion_time",
+        "type": "TIMESTAMP"
+    }, {
+        "mode": "NULLABLE",
+        "name": "pair",
+        "type": "STRING"
+    }, {
+        "mode": "NULLABLE",
+        "name": "purchase_price",
+        "type": "FLOAT"
+    }, {
+        "mode": "NULLABLE",
+        "name": "target_price",
+        "type": "FLOAT"
+    }, {
+        "mode": "NULLABLE",
+        "name": "stop_loss_price",
+        "type": "FLOAT"
+    }, {
+        "mode": "NULLABLE",
+        "name": "sale_price",
+        "type": "FLOAT"
+    }, {
+        "mode": "NULLABLE",
+        "name": "quantity",
+        "type": "FLOAT"
+    }, {
+        "mode": "NULLABLE",
+        "name": "still_open",
+        "type": "BOOLEAN"
+    }, {
+        "mode": "NULLABLE",
+        "name": "profit",
+        "type": "FLOAT"
+    }, {
+        "mode": "NULLABLE",
+        "name": "paid_commissions",
+        "type": "FLOAT"
+    }, {
+        "mode": "NULLABLE",
+        "name": "close_time",
+        "type": "TIMESTAMP"
+    }]
+}

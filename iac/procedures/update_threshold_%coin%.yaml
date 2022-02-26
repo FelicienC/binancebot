@@ -1,0 +1,21 @@
+---
+procedure_id: update_threshold_%coin%
+body: >
+  CREATE OR REPLACE PROCEDURE models.update_threshold_%coin%()
+  BEGIN
+      INSERT INTO `${project}.models.thresholds`
+      SELECT
+        CURRENT_TIMESTAMP(),
+        threshold,
+        "%coin%" AS coin,
+        CONCAT(UPPER("%coin%"), "USDT") AS pair
+      FROM
+        `${project}.evaluation_views.vw_stats_%coin%`
+      CROSS JOIN 
+          (SELECT MAX(positive_diff) AS value FROM `${project}.evaluation_views.vw_stats_%coin%`) AS best_threshold
+      WHERE 
+          positive_diff = best_threshold.value
+      ORDER BY
+          threshold DESC
+      LIMIT 1;
+  END

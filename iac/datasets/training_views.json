@@ -1,0 +1,8 @@
+{
+    "dataset_id": "training_views",
+    "description": "Training Views",
+    "friendly_name": "Training Views",
+    "location": "europe-west1",
+    "delete_contents_on_destroy": false,
+    "default_table_expiration_ms": null
+}

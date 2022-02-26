@@ -1,0 +1,36 @@
+view_id: vw_training_%coin%
+dataset_id: training_views
+query: >
+  WITH labeled AS (
+      SELECT
+          open_time,
+          close,
+          AVG(close) OVER ( ORDER BY open_time
+              ROWS BETWEEN 1440 PRECEDING  AND 0 FOLLOWING
+          ) AS average_close_price,
+          (MAX(close) OVER (ORDER BY open_time -- should be high, not close
+              ROWS BETWEEN 0 PRECEDING AND 60 FOLLOWING ))/close > 1.01 
+              AND
+          (MIN(close) OVER (ORDER BY open_time -- should be high, not close
+              ROWS BETWEEN 0 PRECEDING AND 60 FOLLOWING ))/close > 0.98 AS win_in_hour
+      FROM
+          `${project}.binance_data.minute_%coin%`
+      WHERE
+            DATE(minute_timestamp) < CURRENT_DATE() - 30
+  )
+  SELECT pivoted.*, labeled.win_in_hour FROM 
+      (SELECT
+          labeled.close/average.average_close_price AS close,
+          delta,
+          labeled.open_time + delta*60000 AS minute_start
+      FROM
+          labeled
+      CROSS JOIN UNNEST([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,120,180,240,300,360,420,480,720,1440]) delta
+      LEFT JOIN 
+          labeled AS average
+      ON average.open_time = labeled.open_time + delta*60000)
+
+  PIVOT(MAX(close) AS value_%coin% FOR delta IN (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,120,180,240,300,360,420,480,720,1440) ) pivoted
+  LEFT JOIN 
+  labeled ON labeled.open_time = pivoted.minute_start
+  WHERE value_%coin%_0 IS NOT NULL

@@ -1,0 +1,45 @@
+view_id: vw_stats_%coin%
+dataset_id: evaluation_views
+query: >
+  WITH 
+    outcome_if_buy_now AS (
+        SELECT 
+        nested.open_time as minute_start,
+        CASE 
+            WHEN MAX(nested.close) OVER (ORDER BY nested.open_time ROWS BETWEEN 0 PRECEDING AND 60 FOLLOWING )/nested.close > 1.01 THEN 1.01
+            WHEN MIN(nested.close) OVER (ORDER BY nested.open_time ROWS BETWEEN 0 PRECEDING AND 60 FOLLOWING )/nested.close < 0.98 THEN 0.98
+            ELSE LAST_VALUE(nested.close) OVER (ORDER BY nested.open_time ROWS BETWEEN 0 PRECEDING AND 60 FOLLOWING )/nested.close
+            END AS outcome
+        FROM
+        (
+            SELECT
+                ARRAY_AGG(m ORDER BY m.number_of_trades DESC LIMIT 1)[OFFSET(0)] nested
+            FROM
+                `${project}.binance_data.minute_%coin%` m
+            WHERE
+                DATE(minute_timestamp) >= CURRENT_DATE() - 30
+            GROUP BY
+                open_time
+        )
+    )
+    SELECT
+        ROUND(threshold, 2) AS threshold,
+        COUNTIF(win_in_hour AND predicted_win_in_hour_probs[OFFSET(0)].prob > threshold) AS true_positives,
+        COUNTIF(predicted_win_in_hour_probs[OFFSET(0)].prob > threshold) - COUNTIF(win_in_hour AND predicted_win_in_hour_probs[OFFSET(0)].prob > threshold) AS false_positives,
+        2*COUNTIF(win_in_hour AND predicted_win_in_hour_probs[OFFSET(0)].prob > threshold) - COUNTIF(predicted_win_in_hour_probs[OFFSET(0)].prob > threshold) AS positive_diff,
+        COUNTIF(predicted_win_in_hour_probs[OFFSET(0)].prob > threshold) AS total_positives,
+        ROUND(
+            SAFE_DIVIDE(
+                COUNTIF(win_in_hour AND predicted_win_in_hour_probs[OFFSET(0)].prob > threshold),
+                COUNTIF(predicted_win_in_hour_probs[OFFSET(0)].prob > threshold)),
+            4) AS precision,
+        AVG(IF(predicted_win_in_hour_probs[OFFSET(0)].prob > threshold, outcome_if_buy_now.outcome, NULL)) AS mean_outcome_approx
+    FROM
+      ML.PREDICT(MODEL `${project}.models.bt_%coin%`,
+          TABLE `${project}.evaluation_views.vw_eval_%coin%`)
+    INNER JOIN
+      outcome_if_buy_now USING(minute_start)
+    CROSS JOIN 
+      UNNEST(GENERATE_ARRAY(0.5, 1, .01)) AS threshold
+    GROUP BY threshold
+    HAVING total_positives > 0

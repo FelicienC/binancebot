@@ -1,0 +1,8 @@
+{
+    "dataset_id": "models",
+    "description": "Models",
+    "friendly_name": "Models",
+    "location": "europe-west1",
+    "delete_contents_on_destroy": false,
+    "default_table_expiration_ms": null
+}

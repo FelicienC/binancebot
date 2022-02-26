@@ -1,0 +1,8 @@
+{
+    "dataset_id": "binance_data",
+    "description": "Dataset Containing binance's raw data",
+    "friendly_name": "Binance Data",
+    "location": "europe-west1",
+    "delete_contents_on_destroy": false,
+    "default_table_expiration_ms": null
+}

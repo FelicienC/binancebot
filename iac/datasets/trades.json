@@ -1,0 +1,8 @@
+{
+    "dataset_id": "trades",
+    "description": "trades",
+    "friendly_name": "trades",
+    "location": "europe-west1",
+    "delete_contents_on_destroy": false,
+    "default_table_expiration_ms": null
+}
