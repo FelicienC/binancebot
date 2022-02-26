@@ -1,0 +1,30 @@
+display_name: sq_update_model_%coin%
+dataset_id: models
+schedule: 1st monday of month 08:00
+query: >
+    CREATE OR REPLACE MODEL `${project}.models.bt_%coin%`
+    OPTIONS(MODEL_TYPE='BOOSTED_TREE_CLASSIFIER',
+        TREE_METHOD='EXACT',
+        DATA_SPLIT_METHOD = 'AUTO_SPLIT',
+        AUTO_CLASS_WEIGHTS = TRUE,
+        EARLY_STOP = FALSE,
+        INPUT_LABEL_COLS = ['win_in_hour'],
+        MAX_ITERATIONS=10)
+    AS SELECT * EXCEPT(minute_start) FROM `${project}.training_views.vw_training_%coin%`;
+
+    INSERT INTO `${project}.models.thresholds`
+    SELECT
+        CURRENT_TIMESTAMP(),
+        threshold,
+        "%coin%" AS coin,
+        CONCAT(UPPER("%coin%"), "USDT") AS pair
+    FROM
+        `${project}.evaluation_views.vw_stats_%coin%`
+    CROSS JOIN 
+          (SELECT MAX(positive_diff) AS value FROM `${project}.evaluation_views.vw_stats_%coin%`) AS best_threshold
+    WHERE 
+          positive_diff = best_threshold.value
+    ORDER BY
+          threshold DESC
+    LIMIT 1;
+  

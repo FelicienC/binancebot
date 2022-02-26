@@ -1,0 +1,28 @@
+view_id: vw_decide
+dataset_id: models
+query: >
+    SELECT
+        _TABLE_SUFFIX AS coin,
+        thresholds.threshold,
+        MAX(win_in_hour_prob_estimation) AS estimation,
+    FROM
+        `${project}.binance_data.minute_*` predictions
+    LEFT JOIN
+        `${project}.models.thresholds` thresholds
+    ON
+        predictions._TABLE_SUFFIX = thresholds.coin
+    WHERE
+        DATE(minute_timestamp) IN (CURRENT_DATE(), CURRENT_DATE()-1)
+        AND CONCAT(_TABLE_SUFFIX, open_time) IN (
+        SELECT
+            CONCAT(_TABLE_SUFFIX, MAX(open_time))
+        FROM
+            `${project}.binance_data.minute_*`
+        WHERE
+            DATE(minute_timestamp) IN (CURRENT_DATE(), CURRENT_DATE()-1)
+            AND win_in_hour_prob_estimation IS NOT NULL
+        GROUP BY
+            _TABLE_SUFFIX)
+    GROUP BY
+        _TABLE_SUFFIX,
+        threshold

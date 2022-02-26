@@ -1,0 +1,8 @@
+{
+    "dataset_id": "evaluation_views",
+    "description": "Evaluation Views",
+    "friendly_name": "Evaluation Views",
+    "location": "europe-west1",
+    "delete_contents_on_destroy": false,
+    "default_table_expiration_ms": null
+}
