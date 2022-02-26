@@ -5,10 +5,5 @@ other/
 .terraform
 .terraform.lock.hcl
 terraform.tfstate
-iac/procedures/build
-iac/schedueled_queries/build
-iac/tables/build
-iac/views/build
-iac/functions/build
 iac/.terraform
 iac/terraform.tfstate.backup
