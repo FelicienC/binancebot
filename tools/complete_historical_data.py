@@ -6,11 +6,13 @@ between the current timestamp and the start time provided below
 import json
 import time
 import requests
+import os
 
 from google.cloud import bigquery
 
 bq_client = bigquery.Client()
 START_TIME = round(time.time()) * 1000 - 2 * 365 * 24 * 60 * 60 * 1000
+PROJECT = os.getenv('project')
 
 
 def insert_data(coin, data):

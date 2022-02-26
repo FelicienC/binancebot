@@ -11,6 +11,7 @@ clean-iac:
 prepare-iac:
 	cd tools; \
 	sh generate_iac.sh; \
+	export TF_VAR_project="$project";
 
 plan : clean-iac prepare-iac
 	cd iac; \
@@ -25,3 +26,7 @@ run-tests:
 	coverage run --source=. binancebot_test.py ; \
 	coverage report; \
 	coverage html;
+
+init:
+	cd iac; \
+	terraform init;
