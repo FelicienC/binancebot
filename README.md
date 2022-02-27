@@ -91,6 +91,7 @@ gcloud services enable bigquerydatatransfer.googleapis.com
 gcloud services enable cloudfunctions.googleapis.com
 gcloud services enable cloudscheduler.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
+gcloud services enable secretmanager.googleapis.com
 ```
 
 ## 3 - Creation of the infrastructure
@@ -105,7 +106,7 @@ BNB
 :warning: **Google Cloud's free Tier**: If you want to stay in  the free tier, do not use more than 3 coins (pricing of January 2022)
 
 ```
-export project="PROJECT_ID"
+export TF_VAR_project=PROJECT_ID
 ```
 
 Initialize terraform 
@@ -118,9 +119,11 @@ Deploy the infrastructure :
 make deploy
 ```
 
+At that point, terraform should yield errors, because some views being created need the construction of the ml models first, which we can build in the folowing step :
+
 ## 4 - Training of the ML models
 
-Use the tool script to load the data in your BigQuery infrastructure :
+Use the tool script to load the Binance data in your BigQuery infrastructure :
 ```
 cd tools
 python complete_historical_data.py    
@@ -132,15 +135,21 @@ bq query --nouse_legacy_sql "CALL `PROJECT_ID.models.update_model_COIN`();"
 bq query --nouse_legacy_sql "CALL `PROJECT_ID.models.update_model_COIN`();"
 ```
 
+Deploy the infrastructure again
+```
+make deploy
+```
 
 ## 5 - Connection to the Binance API
 
 Once the secrets' IAC has been created, you can [generate an API key](https://www.binance.com/en/support/faq/360002502072) with your Binance Account and insert it in Google Cloud's secret manager :
 
-````
+```
 printf "your private secret" | gcloud secrets versions add secret-binance-private 
 printf "your api key"| gcloud secrets versions add secret-binance 
 ```
+
+That's it, now your bot is running, you should be able to see the result in the trades table. 
 
 # TODO :
 - [ ] set up a production environnement

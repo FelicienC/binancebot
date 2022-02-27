@@ -12,7 +12,7 @@ from google.cloud import bigquery
 
 bq_client = bigquery.Client()
 START_TIME = round(time.time()) * 1000 - 2 * 365 * 24 * 60 * 60 * 1000
-PROJECT = os.getenv('project')
+PROJECT = os.getenv('TF_VAR_project')
 
 
 def insert_data(coin, data):
@@ -28,7 +28,7 @@ def insert_data(coin, data):
         for element in data
     ]
     bq_client.query(
-        f"INSERT INTO `trading-dv.binance_data.minute_{coin.lower()}`"
+        f"INSERT INTO `{PROJECT}.binance_data.minute_{coin.lower()}`"
         "(minute_timestamp, "
         "open_time, "
         "open, "
@@ -80,7 +80,7 @@ def get_gaps(coin):
 
     # Identify the "current timestamp - data start" gap
     query_job = bq_client.query(
-        f"SELECT MAX(open_time) FROM `trading-dv.binance_data.minute_{coin.lower()}`"
+        f"SELECT MAX(open_time) FROM `{PROJECT}.binance_data.minute_{coin.lower()}`"
     )
     for row in query_job.result():
         gaplist = [(row[0], round(time.time() // 60) * 60000)]
@@ -92,7 +92,7 @@ def get_gaps(coin):
         "       open_time, "
         "       LAG(open_time) OVER(ORDER BY open_time) AS previous_open_time"
         "     FROM "
-        f"        `trading-dv.binance_data.minute_{coin.lower()}` "
+        f"        `{PROJECT}.binance_data.minute_{coin.lower()}` "
         ") WHERE "
         f" open_time - previous_open_time > 60000 AND open_time > {START_TIME}"
         " ORDER BY open_time DESC"
@@ -102,7 +102,7 @@ def get_gaps(coin):
 
     # Check if the data goes back to the start date
     query_job = bq_client.query(
-        f"SELECT MIN(open_time) FROM `trading-dv.binance_data.minute_{coin.lower()}`"
+        f"SELECT MIN(open_time) FROM `{PROJECT}.binance_data.minute_{coin.lower()}`"
     )
     for row in query_job.result():
         if row[0] > START_TIME:
@@ -132,7 +132,7 @@ def deduplicate(coin) -> None:
     Call the bigquery stored procedure to deduplicate the data for a specific
     coin
     """
-    bq_client.query(f"CALL `trading-dv.binance_data.deduplicate_{coin.lower()}`();")
+    bq_client.query(f"CALL `{PROJECT}.binance_data.deduplicate_{coin.lower()}`();")
 
 
 def main():

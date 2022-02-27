@@ -43,7 +43,7 @@ for d in ../iac/functions/*/ ; do
             file_template=$(echo $file_path | sed "s/.*\///");
             cat $file_path \
              | sed "s/\[\"BTC\", \"ETH\", \"SOL\"\]/$coinlist/" \
-             | sed "s/trading-dv/$project/" > ../iac/functions/build/$function_name/$file_template;
+             | sed "s/trading-dv/$TF_VAR_project/" > ../iac/functions/build/$function_name/$file_template;
         done;
     fi;
 
