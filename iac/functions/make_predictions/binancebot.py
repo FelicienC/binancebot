@@ -64,7 +64,8 @@ class BinanceBot:
 
     def create_buy_order(self, symbol, usd_amount):
         """Create a Binance buy order at the current market price"""
-        usd_amount = round(float(usd_amount), 2)
+        usd_amount = int(usd_amount)
+        print(usd_amount, symbol)
         params = {
             "symbol": symbol,
             "quoteOrderQty": usd_amount,
@@ -152,7 +153,7 @@ class BinanceBot:
     def open_trade(self, symbol, current_price, target, stop_loss):
         """Open a trade and log the information in BigQuery"""
         response = self.create_buy_order(symbol, self.asset_quantities["USDT"])
-        quantity = float(self.asset_quantities["USDT"]) / current_price
+        quantity = self.asset_quantities["USDT"] / current_price
         if response.status_code == 200:
             self.bq_client.query(
                 f"INSERT INTO `{self.project}.trades.trades` VALUES "
@@ -169,7 +170,7 @@ class BinanceBot:
                 " NULL)"
             )
         else:
-            print("Error while opening a trade in Binance", response.content)
+            raise Exception(f"Error while opening a trade in Binance {response.content}")
 
     def close_trade(self, coin, trade_timestamp, sale_price, profit):
         """Close a trade and log the information in BigQuery"""
@@ -186,7 +187,7 @@ class BinanceBot:
                 f"  ingestion_time = '{trade_timestamp}'"
             )
         else:
-            print("Error while closing a trade in Binance", response.content)
+            raise Exception(f"Error while closing a trade in Binance {response.content}")
 
     def update_full_history(self, coin: str):
         """
@@ -232,7 +233,7 @@ class BinanceBot:
             "SELECT predicted_win_in_hour_probs[OFFSET(0)].prob AS prob "
             "FROM "
             "ML.PREDICT("
-            f"MODEL `trading-dv.models.bt_{lc_coin}`,"
+            f"MODEL `{self.project}.models.bt_{lc_coin}`,"
             "(SELECT "
             + ",".join(
                 [
@@ -246,9 +247,11 @@ class BinanceBot:
         query_job = self.bq_client.query(query)
         for row in query_job.result():
             self.estimations[coin] = float(row["prob"])
+            print(f'{coin} , {float(row["prob"])}')
 
     def update_thresholds(self):
         """Update the thresholds used by the bot"""
+        print("Updating thresholds")
         query_job = self.bq_client.query(
             f"SELECT * FROM `{self.project}.models.thresholds` "
             f"ORDER BY ingestion_timestamp DESC LIMIT {len(self.coin_list)}"
@@ -257,9 +260,11 @@ class BinanceBot:
         self.thresholds["timestamp"] = time.time()
         for row in rows:
             self.thresholds[row["coin"].upper()] = float(row["threshold"])
+        print(self.thresholds)
 
     def update_secrets(self):
         """Update the secrets used by the bot"""
+        print("Updating secrets")
         response = self.sm_client.access_secret_version(
             {"name": f"projects/{self.project}/secrets/secret-binance/versions/latest"}
         )
@@ -306,6 +311,7 @@ class BinanceBot:
         position, keep it, or open one if none already is.
         """
         if self.current_open_trade:
+            print("Trade already open", self.current_open_trade)
             coin = self.current_open_trade["pair"][:-4]
             if (
                 self.data_hist[coin][-1]
@@ -319,12 +325,14 @@ class BinanceBot:
                     self.data_hist[coin][-1]
                     - float(self.current_open_trade["purchase_price"])
                 ) * float(self.current_open_trade["quantity"])
+                print("Closing trade; restult: ", trade_result)
                 self.close_trade(
                     coin,
                     self.current_open_trade["ingestion_time"],
                     self.data_hist[coin][-1],
                     trade_result,
                 )
+                self.update_asset_quantities()
         else:
             coin_signals = [
                 (coin, self.estimations[coin] - self.thresholds[coin])
@@ -333,9 +341,15 @@ class BinanceBot:
             ]
             if coin_signals:
                 coin = max(coin_signals, key=lambda x: x[1])[0]
-                self.open_trade(
-                    symbol=coin+"USDT",
-                    current_price=self.data_hist[coin][-1],
-                    target=self.data_hist[coin][-1] * self.take_profit,
-                    stop_loss=self.data_hist[coin][-1] * self.stop_loss,
-                )
+                print(f"Coin Signal for  {coin}")
+                if self.asset_quantities["USDT"] > 10:
+                    self.open_trade(
+                        symbol=coin+"USDT",
+                        current_price=self.data_hist[coin][-1],
+                        target=self.data_hist[coin][-1] * self.take_profit,
+                        stop_loss=self.data_hist[coin][-1] * self.stop_loss,
+                    )
+                    self.update_asset_quantities()
+                else:
+                    print("Not enought funds in the Binance account")
+

@@ -10,8 +10,7 @@ clean-iac:
 
 prepare-iac:
 	cd tools; \
-	sh generate_iac.sh; \
-	export TF_VAR_project="$project";
+	sh generate_iac.sh;
 
 plan : clean-iac prepare-iac
 	cd iac; \
