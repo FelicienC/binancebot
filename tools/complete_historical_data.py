@@ -49,6 +49,7 @@ def get_klines(symbol: str = None, end_time: int = None, start_time: int = None)
     """
     Request the 500 last minutes from the public Binance API and return them
     """
+    print(f"{start_time} {end_time}", end="\r")
 
     end_time_str = "" if end_time is None else f"&endTime={end_time}"
     startime_str = "" if start_time is None else f"&startTime={start_time}"
@@ -83,7 +84,8 @@ def get_gaps(coin):
         f"SELECT MAX(open_time) FROM `{PROJECT}.binance_data.minute_{coin.lower()}`"
     )
     for row in query_job.result():
-        gaplist = [(row[0], round(time.time() // 60) * 60000)]
+        if row[0] is not None:
+            gaplist = [(row[0], round(time.time() // 60) * 60000)]
 
     # Get all the gaps in the table
     query_job = bq_client.query(
@@ -105,12 +107,12 @@ def get_gaps(coin):
         f"SELECT MIN(open_time) FROM `{PROJECT}.binance_data.minute_{coin.lower()}`"
     )
     for row in query_job.result():
-        if row[0] > START_TIME:
+        if row[0] is not None and row[0] > START_TIME:
             gaplist.append((row[0], START_TIME))
 
     # In case the tables were empty
     if not gaplist:
-        gaplist = [(round(time.time() // 60) * 60000, START_TIME)]
+        gaplist = [(START_TIME, round(time.time() // 60) * 60000)]
     return gaplist
 
 
@@ -147,10 +149,9 @@ def main():
             coin = coin[:-1]
             print(f"\n\nLoading data for {coin}")
             gaps = get_gaps(coin)
-            print(f"Founds {len(gaps)} gaps")
+            print(f"Found {len(gaps)} gaps")
             for start, end in gaps:
                 fill_between(coin, start, end)
-                print(f"{start} {end}")
             coin = file.readline()
 
 
