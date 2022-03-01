@@ -74,7 +74,7 @@ make deploy
 
 ### 1 - Installation of required tools
 
-If you wish to set up this bot, you need to use the folowing tools:
+If you wish to set up this bot, you need to use the following tools:
 
  - [The gcloud CLI](https://cloud.google.com/sdk/docs/install)
  - [Terrafom](https://learn.hashicorp.com/tutorials/terraform/install-cli)
