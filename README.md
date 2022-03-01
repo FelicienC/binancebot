@@ -37,7 +37,7 @@ The infrastructure used in this project is defined with Terraform, and contained
 - Scheduler 
 - PubSub
 
-These resources are arranged as described in the folowing diagram :
+These resources are arranged as described in the following diagram :
 ![infrastructure-schema](docs/schema.svg)
 
 ### Tools
