@@ -6,7 +6,7 @@ This project aims at creating a simple crypto-currency trading bot running on [G
 
 - [How does it work ?](#how-does-it-work)
 - [What is in this repository ?](#what-is-in-this-repository)
-- [Usefull commands](#useful-commands)
+- [Useful commands](#useful-commands)
 - [Project Setup](#project-setup)
 - [Future Improvements](#todo)
 
